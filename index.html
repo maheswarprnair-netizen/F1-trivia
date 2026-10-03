@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>F1 Knowledge Test</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: #09090d;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+}
+
+.container {
+  width: 100%;
+  max-width: 650px;
+  background: #15151c;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 0 35px rgba(255,0,0,0.15);
+}
+
+h1 {
+  text-align: center;
+  margin-top: 0;
+}
+
+.red {
+  color: #e10600;
+}
+
+.subtitle {
+  text-align: center;
+  color: #aaa;
+  margin-bottom: 25px;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #e10600;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+.start-screen {
+  text-align: center;
+}
+
+.quiz,
+.result {
+  display: none;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  color: #bbb;
+}
+
+.timer {
+  color: #ff4b4b;
+  font-weight: bold;
+}
+
+.progress {
+  height: 6px;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 25px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #e10600;
+  transition: width 0.3s;
+}
+
+.question {
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.answer {
+  background: #24242d;
+  text-align: left;
+  border: 2px solid transparent;
+}
+
+.answer:hover {
+  border-color: #e10600;
+}
+
+.answer.correct {
+  background: #176b3a !important;
+}
+
+.answer.wrong {
+  background: #8b1e1e !important;
+}
+
+.next {
+  background: #444;
+  display: none;
+}
+
+.result {
+  text-align: center;
+}
+
+.score {
+  font-size: 50px;
+  font-weight: bold;
+  color: #e10600;
+}
+
+.rating {
+  font-size: 25px;
+  margin: 15px 0;
+}
+
+.small {
+  color: #888;
+  font-size: 13px;
+  margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- START SCREEN -->
+
+<div class="start-screen" id="startScreen">
+
+<h1>🏎️ <span class="red">F1</span> Knowledge Test</h1>
+
+<p class="subtitle">
+How well do you REALLY know Formula 1?
+</p>
+
+<p>100-question pool • 5 questions per attempt</p>
+
+<p>Your previous questions won't be repeated.</p>
+
+<button onclick="startQuiz()">START QUIZ</button>
+
+<p class="small">
+Your progress is saved on this browser.
+</p>
+
+</div>
+
+
+<!-- QUIZ -->
+
+<div class="quiz" id="quiz">
+
+<div class="top-bar">
+
+<span id="questionNumber">
+Question 1/5
+</span>
+
+<span class="timer">
+⏱️ <span id="time">15</span>
+</span>
+
+</div>
+
+<div class="progress">
+
+<div class="progress-bar" id="progressBar"></div>
+
+</div>
+
+<div class="question" id="question"></div>
+
+<div id="answers"></div>
+
+<button class="next" id="nextButton" onclick="nextQuestion()">
+NEXT QUESTION →
+</button>
+
+</div>
+
+
+<!-- RESULT -->
+
+<div class="result" id="result">
+
+<h1>🏁 Quiz Finished!</h1>
+
+<div class="score" id="finalScore">
+0/5
+</div>
+
+<div class="rating" id="rating"></div>
+
+<p id="message"></p>
+
+<button onclick="location.reload()">
+PLAY AGAIN
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   100 QUESTION F1 DATABASE
+   ========================================================= */
+
+const questions = [
+
+{
+q:"Who won the first Formula 1 World Championship in 1950?",
+a:["Juan Manuel Fangio","Giuseppe Farina","Alberto Ascari","Jack Brabham"],
+c:1
+},
+
+{
+q:"Which circuit hosted the first F1 World Championship race?",
+a:["Monza","Silverstone","Monaco","Spa"],
+c:1
+},
+
+{
+q:"Which driver has won seven F1 World Championships?",
+a:["Ayrton Senna","Alain Prost","Michael Schumacher","Nigel Mansell"],
+c:2
+},
+
+{
+q:"Which other driver has won seven F1 World Championships?",
+a:["Lewis Hamilton","Sebastian Vettel","Fernando Alonso","Jack Brabham"],
+c:0
+},
+
+{
+q:"What does F1 stand for?",
+a:["Formula One","Formula International","Formula Racing One","Fast One"],
+c:0
+},
+
+{
+q:"What does DRS stand for?",
+a:["Drag Reduction System","Downforce Racing System","Driver Reduction System","Drag Racing Setup"],
+c:0
+},
+
+{
+q:"What does ERS stand for?",
+a:["Energy Recovery System","Engine Racing System","Electric Racing Setup","Energy Regulation System"],
+c:0
+},
+
+{
+q:"What does MGU-K recover?",
+a:["Heat energy","Kinetic energy","Solar energy","Fuel energy"],
+c:1
+},
+
+{
+q:"What does MGU-H recover?",
+a:["Heat energy","Kinetic energy","Brake fluid","Fuel"],
+c:0
+},
+
+{
+q:"What is the Halo?",
+a:["A safety structure","A type of tyre","A rear wing","A braking system"],
+c:0
+},
+
+{
+q:"Which team is based in Maranello?",
+a:["Ferrari","Mercedes","McLaren","Williams"],
+c:0
+},
+
+{
+q:"Which team traditionally uses a papaya orange colour?",
+a:["Ferrari","McLaren","Mercedes","Alpine"],
+c:1
+},
+
+{
+q:"Which team uses the nickname 'The Silver Arrows'?",
+a:["Ferrari","Mercedes","Williams","McLaren"],
+c:1
+},
+
+{
+q:"Which team was founded by Bruce McLaren?",
+a:["McLaren","Lotus","Williams","Tyrrell"],
+c:0
+},
+
+{
+q:"Which team was founded by Frank Williams?",
+a:["Williams","Ferrari","Jordan","Benetton"],
+c:0
+},
+
+{
+q:"Which team has the famous Prancing Horse logo?",
+a:["Ferrari","Alfa Romeo","Mercedes","Sauber"],
+c:0
+},
+
+{
+q:"Which country is Ferrari associated with?",
+a:["Germany","Italy","France","Spain"],
+c:1
+},
+
+{
+q:"Which country is McLaren associated with?",
+a:["Italy","Germany","United Kingdom","France"],
+c:2
+},
+
+{
+q:"Which country is Mercedes associated with?",
+a:["Germany","Austria","Switzerland","Italy"],
+c:0
+},
+
+{
+q:"Which circuit is known as the Temple of Speed?",
+a:["Monza","Monaco","Suzuka","Silverstone"],
+c:0
+},
+
+{
+q:"Which circuit features the famous Eau Rouge section?",
+a:["Spa-Francorchamps","Monza","Imola","Silverstone"],
+c:0
+},
+
+{
+q:"Which country hosts Spa-Francorchamps?",
+a:["France","Belgium","Germany","Netherlands"],
+c:1
+},
+
+{
+q:"Which country hosts the Suzuka Circuit?",
+a:["China","Japan","South Korea","Singapore"],
+c:1
+},
+
+{
+q:"Which circuit is famous for its Swimming Pool section?",
+a:["Monaco","Singapore","Baku","Miami"],
+c:0
+},
+
+{
+q:"Which circuit is located in Monaco?",
+a:["Circuit de Monaco","Circuit Gilles Villeneuve","Marina Bay","Albert Park"],
+c:0
+},
+
+{
+q:"Which circuit hosts the Canadian Grand Prix?",
+a:["Circuit Gilles Villeneuve","Road America","Montreal Ring","Canadian GP Circuit"],
+c:0
+},
+
+{
+q:"Which city hosts the Canadian Grand Prix?",
+a:["Toronto","Vancouver","Montreal","Ottawa"],
+c:2
+},
+
+{
+q:"Which circuit hosts the Australian Grand Prix?",
+a:["Albert Park","Phillip Island","Sydney Motorsport Park","Bathurst"],
+c:0
+},
+
+{
+q:"Which circuit hosts the Singapore Grand Prix?",
+a:["Marina Bay","Sepang","Suzuka","Baku"],
+c:0
+},
+
+{
+q:"Which circuit hosts the Azerbaijan Grand Prix?",
+a:["Baku City Circuit","Istanbul Park","Marina Bay","Sochi"],
+c:0
+},
+
+{
+q:"Which circuit hosts the Hungarian Grand Prix?",
+a:["Hungaroring","Red Bull Ring","Hockenheim","Nürburgring"],
+c:0
+},
+
+{
+q:"Which country hosts the Red Bull Ring?",
+a:["Germany","Austria","Switzerland","Hungary"],
+c:1
+},
+
+{
+q:"Which circuit hosts the British Grand Prix?",
+a:["Silverstone","Brands Hatch","Donington","Goodwood"],
+c:0
+},
+
+{
+q:"Which circuit hosts the Italian Grand Prix?",
+a:["Monza","Imola","Mugello","Misano"],
+c:0
+},
+
+{
+q:"Which circuit hosts the Dutch Grand Prix?",
+a:["Zandvoort","Assen","Rotterdam Circuit","Zolder"],
+c:0
+},
+
+{
+q:"Which country is the Zandvoort circuit in?",
+a:["Belgium","Germany","Netherlands","Denmark"],
+c:2
+},
+
+{
+q:"Which circuit hosts the United States Grand Prix?",
+a:["Circuit of the Americas","Daytona","Indianapolis Motor Speedway","Laguna Seca"],
+c:0
+},
+
+{
+q:"What is the nickname of Circuit of the Americas?",
+a:["COTA","COTF","America Ring","Texas GP Circuit"],
+c:0
+},
+
+{
+q:"Which circuit hosts the Brazilian Grand Prix?",
+a:["Interlagos","Jacarepaguá","Brasília Circuit","Rio Ring"],
+c:0
+},
+
+{
+q:"Which city is Interlagos located in?",
+a:["Rio de Janeiro","São Paulo","Brasília","Salvador"],
+c:1
+},
+
+{
+q:"Which circuit is famous for its high-speed nature and long history in Italy?",
+a:["Monza","Monaco","Hungaroring","Zandvoort"],
+c:0
+},
+
+{
+q:"How many wheels does a normal F1 car have?",
+a:["3","4","5","6"],
+c:1
+},
+
+{
+q:"What is the main purpose of an F1 car's front wing?",
+a:["Generate aerodynamic load and manage airflow","Store fuel","Cool the driver","Increase engine power"],
+c:0
+},
+
+{
+q:"What is downforce?",
+a:["Aerodynamic force pushing the car toward the track","Engine power","Braking force","Tyre temperature"],
+c:0
+},
+
+{
+q:"What is drag?",
+a:["Aerodynamic resistance","Engine vibration","Brake pressure","Tyre grip"],
+c:0
+},
+
+{
+q:"What is an F1 diffuser mainly used for?",
+a:["Managing airflow under the car","Cooling the helmet","Increasing fuel capacity","Controlling the gearbox"],
+c:0
+},
+
+{
+q:"What is the purpose of the rear wing?",
+a:["Generate aerodynamic load and manage drag","Store energy","Cool the brakes","Control the steering"],
+c:0
+},
+
+{
+q:"What is the plank under an F1 car used partly to monitor?",
+a:["Car ride height and wear","Fuel quality","Engine temperature","Tyre pressure"],
+c:0
+},
+
+{
+q:"What is a pit stop?",
+a:["A stop in the pit lane for servicing the car","A safety-car period","A formation lap","A qualifying session"],
+c:0
+},
+
+{
+q:"What is an undercut?",
+a:["Pitting earlier than a rival to gain track position through fresher tyres","Passing under a bridge","Starting from the pit lane","Using DRS"],
+c:0
+},
+
+{
+q:"What is an overcut?",
+a:["Staying out longer than a rival before making a pit stop","Overtaking twice","Using two sets of hard tyres","Starting first"],
+c:0
+},
+
+{
+q:"What does pole position mean?",
+a:["First place on the starting grid","First place after the race","Fastest pit stop","First car into the pits"],
+c:0
+},
+
+{
+q:"What is a formation lap?",
+a:["The lap before the race start","The final race lap","A qualifying lap","A safety-car lap"],
+c:0
+},
+
+{
+q:"What does a yellow flag generally indicate?",
+a:["Danger ahead and drivers must slow down","Race victory","DRS activation","Pit lane closure"],
+c:0
+},
+
+{
+q:"What does a red flag indicate?",
+a:["The session or race has been stopped","The fastest lap","A driver has won","DRS is disabled"],
+c:0
+},
+
+{
+q:"What does a blue flag generally tell a driver?",
+a:["A faster car is approaching and they may need to let it pass","The race is over","Rain is coming","Their tyres are cold"],
+c:0
+},
+
+{
+q:"What does the chequered flag indicate?",
+a:["The end of a session or race","A safety car","A penalty","A pit stop"],
+c:0
+},
+
+{
+q:"What is the Safety Car used for?",
+a:["Controlling the field during dangerous conditions","Giving the leader extra points","Testing new tyres","Starting qualifying"],
+c:0
+},
+
+{
+q:"What does VSC stand for?",
+a:["Virtual Safety Car","Variable Speed Control","Virtual Speed Car","Vehicle Safety Control"],
+c:0
+},
+
+{
+q:"What is parc fermé?",
+a:["A restricted area where cars are kept under controlled conditions","The pit wall","The paddock entrance","The tyre warehouse"],
+c:0
+},
+
+{
+q:"Which tyre compound is generally the softest among dry-weather compounds?",
+a:["Soft","Medium","Hard","Intermediate"],
+c:0
+},
+
+{
+q:"Which tyre is designed for wet conditions with standing water?",
+a:["Full wet","Soft","Medium","Hard"],
+c:0
+},
+
+{
+q:"Which tyre is designed for light or changing wet conditions?",
+a:["Intermediate","Hard","Soft","Full slick"],
+c:0
+},
+
+{
+q:"What are slick tyres?",
+a:["Dry tyres without tread grooves","Wet tyres","Tyres with deep grooves","Winter tyres"],
+c:0
+},
+
+{
+q:"What is a stint?",
+a:["A period of running between pit stops","A qualifying session","A formation lap","A penalty"],
+c:0
+},
+
+{
+q:"What is a double-stack pit stop?",
+a:["Two teammates stopping during the same pit-stop sequence","Two pit stops on one lap","Two drivers sharing one car","Two tyre compounds at once"],
+c:0
+},
+
+{
+q:"What is a drive-through penalty?",
+a:["A driver must pass through the pit lane without stopping for service","A grid penalty","A time penalty","A tyre penalty"],
+c:0
+},
+
+{
+q:"What is a stop-and-go penalty?",
+a:["A driver must enter the pits and stop for a specified period","A five-second penalty","A grid drop","A qualifying ban"],
+c:0
+},
+
+{
+q:"Which driver was nicknamed 'The Iceman'?",
+a:["Kimi Räikkönen","Fernando Alonso","Nico Rosberg","Valtteri Bottas"],
+c:0
+},
+
+{
+q:"Which driver won the 2005 and 2006 World Championships?",
+a:["Fernando Alonso","Kimi Räikkönen","Felipe Massa","Jenson Button"],
+c:0
+},
+
+{
+q:"Which driver won the 2009 World Championship?",
+a:["Jenson Button","Sebastian Vettel","Lewis Hamilton","Mark Webber"],
+c:0
+},
+
+{
+q:"Which driver won the 2016 World Championship?",
+a:["Nico Rosberg","Lewis Hamilton","Sebastian Vettel","Daniel Ricciardo"],
+c:0
+},
+
+{
+q:"Which driver won four consecutive titles from 2010 to 2013?",
+a:["Sebastian Vettel","Fernando Alonso","Lewis Hamilton","Mark Webber"],
+c:0
+},
+
+{
+q:"Which driver won the 1992 World Championship?",
+a:["Nigel Mansell","Alain Prost","Ayrton Senna","Damon Hill"],
+c:0
+},
+
+{
+q:"Which driver won the 1988 World Championship?",
+a:["Ayrton Senna","Alain Prost","Nigel Mansell","Nelson Piquet"],
+c:0
+},
+
+{
+q:"Which driver won the 1985 World Championship?",
+a:["Alain Prost","Ayrton Senna","Niki Lauda","Keke Rosberg"],
+c:0
+},
+
+{
+q:"Which driver won the 1982 World Championship?",
+a:["Keke Rosberg","Alain Prost","Nelson Piquet","Gilles Villeneuve"],
+c:0
+},
+
+{
+q:"Which driver won the 1976 World Championship?",
+a:["James Hunt","Niki Lauda","Emerson Fittipaldi","Jacky Ickx"],
+c:0
+},
+
+{
+q:"Which driver won the 1975 World Championship?",
+a:["Niki Lauda","James Hunt","Emerson Fittipaldi","Jody Scheckter"],
+c:0
+},
+
+{
+q:"Which driver won the 1972 World Championship?",
+a:["Emerson Fittipaldi","Jackie Stewart","Niki Lauda","Graham Hill"],
+c:0
+},
+
+{
+q:"Which driver won the 1969 World Championship?",
+a:["Jackie Stewart","Graham Hill","Jochen Rindt","Jack Brabham"],
+c:0
+},
+
+{
+q:"Which driver won the 1966 World Championship?",
+a:["Jack Brabham","Jim Clark","Graham Hill","John Surtees"],
+c:0
+},
+
+{
+q:"Which driver won the 1964 World Championship?",
+a:["John Surtees","Jim Clark","Graham Hill","Jack Brabham"],
+c:0
+},
+
+{
+q:"Which driver won the 1958 World Championship?",
+a:["Mike Hawthorn","Stirling Moss","Juan Manuel Fangio","Peter Collins"],
+c:0
+},
+
+{
+q:"Which driver was known as 'The Professor'?",
+a:["Alain Prost","Ayrton Senna","Niki Lauda","Nelson Piquet"],
+c:0
+},
+
+{
+q:"Which driver is famous for the quote about racing being life?",
+a:["Ayrton Senna","Michael Schumacher","Alain Prost","Nigel Mansell"],
+c:0
+},
+
+{
+q:"Who was the first driver to win four consecutive F1 World Championships?",
+a:["Sebastian Vettel","Michael Schumacher","Juan Manuel Fangio","Alain Prost"],
+c:2
+},
+
+{
+q:"Which driver won five World Championships during the 1950s?",
+a:["Juan Manuel Fangio","Alberto Ascari","Stirling Moss","Mike Hawthorn"],
+c:0
+},
+
+{
+q:"Which driver won the 1952 and 1953 World Championships?",
+a:["Alberto Ascari","Juan Manuel Fangio","Giuseppe Farina","Mike Hawthorn"],
+c:0
+},
+
+{
+q:"Which legendary Brazilian driver won three World Championships?",
+a:["Ayrton Senna","Emerson Fittipaldi","Rubens Barrichello","Felipe Massa"],
+c:0
+},
+
+{
+q:"Which Brazilian driver became the youngest F1 World Champion at the time in 1972?",
+a:["Emerson Fittipaldi","Ayrton Senna","Nelson Piquet","Rubens Barrichello"],
+c:0
+},
+
+{
+q:"Which circuit is famous for its swimming-pool chicane?",
+a:["Monaco","Spa","Monza","Suzuka"],
+c:0
+},
+
+{
+q:"Which circuit has the famous 130R corner?",
+a:["Suzuka","Monza","Silverstone","Spa"],
+c:0
+},
+
+{
+q:"Which circuit is famous for the Maggotts and Becketts complex?",
+a:["Silverstone","Monaco","Baku","Interlagos"],
+c:0
+},
+
+{
+q:"Which circuit features the Parabolica corner?",
+a:["Monza","Spa","Suzuka","Monaco"],
+c:0
+},
+
+{
+q:"Which circuit is famous for its Casino Square?",
+a:["Monaco","Singapore","Las Vegas","Miami"],
+c:0
+},
+
+{
+q:"Which country hosts the Monaco Grand Prix?",
+a:["Monaco","France","Italy","Spain"],
+c:0
+},
+
+{
+q:"What is the main purpose of a seat belt in an F1 car?",
+a:["Protect the driver during impacts","Improve aerodynamics","Cool the driver","Increase engine power"],
+c:0
+},
+
+{
+q:"What is a steering wheel used for besides steering?",
+a:["It can contain controls and displays","It stores fuel","It controls the tyres mechanically","It replaces the pedals"],
+c:0
+},
+
+{
+q:"What is telemetry?",
+a:["Data sent from the car to the team","A type of tyre","A racing flag","A pit-stop tool"],
+c:0
+},
+
+{
+q:"What does a race engineer generally do?",
+a:["Helps analyse car performance and communicates with the driver","Drives the safety car","Changes tyres","Controls the TV broadcast"],
+c:0
+},
+
+{
+q:"What is a constructor in F1?",
+a:["A team that designs and builds its car","A race official","A tyre manufacturer","A circuit designer"],
+c:0
+},
+
+{
+q:"What is the Constructors' Championship?",
+a:["The championship awarded to teams","The championship for rookie drivers","The qualifying championship","The tyre championship"],
+c:0
+},
+
+{
+q:"What is the Drivers' Championship?",
+a:["The championship awarded to drivers","The championship for teams","The pit-stop championship","The engine championship"],
+c:0
+},
+
+{
+q:"What is a Grand Prix?",
+a:["An F1 race event","A type of tyre","A qualifying session","A pit stop"],
+c:0
+}
+
+];
+
+
+/* =========================================================
+   RANDOM NUMBER HELPER
+   ========================================================= */
+
+function shuffle(array) {
+
+  for (let i = array.length - 1; i > 0; i--) {
+
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [array[i], array[j]] = [array[j], array[i]];
+
+  }
+
+  return array;
+}
+
+
+/* =========================================================
+   PREVIOUS QUESTION TRACKING
+   ========================================================= */
+
+const STORAGE_KEY = "f1TriviaUsedQuestions";
+
+let usedQuestions =
+  JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+
+/* =========================================================
+   CURRENT QUIZ VARIABLES
+   ========================================================= */
+
+let quizQuestions = [];
+
+let currentQuestion = 0;
+
+let score = 0;
+
+let timeLeft = 15;
+
+let timer;
+
+
+/* =========================================================
+   START QUIZ
+   ========================================================= */
+
+function startQuiz() {
+
+  /*
+    Find questions that haven't been used yet.
+  */
+
+  let available = questions
+    .map((q, index) => index)
+    .filter(index => !usedQuestions.includes(index));
+
+
+  /*
+    If fewer than 5 questions remain,
+    start a fresh cycle.
+  */
+
+  if (available.length < 5) {
+
+    usedQuestions = [];
+
+    localStorage.removeItem(STORAGE_KEY);
+
+    available = questions.map((q, index) => index);
+
+  }
+
+
+  /*
+    Randomize the available questions.
+  */
+
+  shuffle(available);
+
+
+  /*
+    Take only five.
+  */
+
+  const selected = available.slice(0, 5);
+
+
+  /*
+    Remember these questions.
+  */
+
+  usedQuestions.push(...selected);
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(usedQuestions)
+  );
+
+
+  /*
+    Create a copy of the selected questions.
+  */
+
+  quizQuestions = selected.map(index => {
+
+    const original = questions[index];
+
+    const answerObjects = original.a.map((answer, i) => ({
+      text: answer,
+      correct: i === original.c
+    }));
+
+    shuffle(answerObjects);
+
+    return {
+      q: original.q,
+      answers: answerObjects
+    };
+
+  });
+
+
+  currentQuestion = 0;
+
+  score = 0;
+
+
+  document.getElementById("startScreen").style.display = "none";
+
+  document.getElementById("result").style.display = "none";
+
+  document.getElementById("quiz").style.display = "block";
+
+
+  showQuestion();
+
+}
+
+
+/* =========================================================
+   SHOW QUESTION
+   ========================================================= */
+
+function showQuestion() {
+
+  clearInterval(timer);
+
+  timeLeft = 15;
+
+  document.getElementById("time").textContent = timeLeft;
+
+
+  document.getElementById("questionNumber").textContent =
+    "Question " + (currentQuestion + 1) + "/5";
+
+
+  document.getElementById("progressBar").style.width =
+    (currentQuestion / 5) * 100 + "%";
+
+
+  const q = quizQuestions[currentQuestion];
+
+
+  document.getElementById("question").textContent = q.q;
+
+
+  const answersDiv =
+    document.getElementById("answers");
+
+  answersDiv.innerHTML = "";
+
+
+  q.answers.forEach((answer) => {
+
+    const button =
+      document.createElement("button");
+
+    button.textContent = answer.text;
+
+    button.classList.add("answer");
+
+    button.onclick = () =>
+      selectAnswer(answer.correct, button);
+
+    answersDiv.appendChild(button);
+
+  });
+
+
+  document.getElementById("nextButton").style.display = "none";
+
+
+  startTimer();
+
+}
+
+
+/* =========================================================
+   TIMER
+   ========================================================= */
+
+function startTimer() {
+
+  timer = setInterval(() => {
+
+    timeLeft--;
+
+    document.getElementById("time").textContent =
+      timeLeft;
+
+
+    if (timeLeft <= 0) {
+
+      clearInterval(timer);
+
+      disableAnswers();
+
+      document.getElementById("nextButton").style.display =
+        "block";
+
+    }
+
+  }, 1000);
+
+}
+
+
+/* =========================================================
+   ANSWER
+   ========================================================= */
+
+function selectAnswer(isCorrect, button) {
+
+  clearInterval(timer);
+
+  disableAnswers();
+
+
+  if (isCorrect) {
+
+    button.classList.add("correct");
+
+    score++;
+
+  } else {
+
+    button.classList.add("wrong");
+
+
+    const buttons =
+      document.querySelectorAll(".answer");
+
+
+    quizQuestions[currentQuestion].answers
+      .forEach((answer, index) => {
+
+        if (answer.correct) {
+
+          buttons[index].classList.add("correct");
+
+        }
+
+      });
+
+  }
+
+
+  document.getElementById("nextButton").style.display =
+    "block";
+
+}
+
+
+/* =========================================================
+   DISABLE ANSWERS
+   ========================================================= */
+
+function disableAnswers() {
+
+  document.querySelectorAll(".answer").forEach(button => {
+
+    button.disabled = true;
+
+  });
+
+}
+
+
+/* =========================================================
+   NEXT QUESTION
+   ========================================================= */
+
+function nextQuestion() {
+
+  currentQuestion++;
+
+
+  if (currentQuestion < 5) {
+
+    showQuestion();
+
+  } else {
+
+    showResult();
+
+  }
+
+}
+
+
+/* =========================================================
+   RESULT
+   ========================================================= */
+
+function showResult() {
+
+  clearInterval(timer);
+
+  document.getElementById("quiz").style.display =
+    "none";
+
+  document.getElementById("result").style.display =
+    "block";
+
+
+  document.getElementById("finalScore").textContent =
+    score + "/5";
+
+
+  let rating;
+
+  let message;
+
+
+  if (score === 5) {
+
+    rating = "🏆 Paddock Legend";
+
+    message = "You know your F1.";
+
+  }
+
+  else if (score
